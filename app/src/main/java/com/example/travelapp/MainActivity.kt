@@ -1,0 +1,80 @@
+package com.example.travelapp
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.example.registeruser.screens.RegisterUser
+import com.example.registeruser.screens.RegisterUserScreen
+import com.example.travelapp.screens.LoginUserScreen
+import com.example.travelapp.screens.MenuScreen
+import com.example.travelapp.ui.theme.TravelAppTheme
+
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            TravelAppTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    Activity()
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun Activity() {
+    val navController = rememberNavController()
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(text = "TravelApp")
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                )
+            )
+        }
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(it)
+        ) {
+            NavHost(
+                navController = navController,
+                startDestination = "LoginUserScreen"
+            ) {
+                composable(route = "LoginUserScreen") {
+                    LoginUserScreen(onNavigateTo = { navController.navigate(it) })
+                }
+                composable(route = "RegisterUserScreen") {
+                    RegisterUserScreen(onNavigateTo = { navController.navigate(it) })
+                }
+                composable(route = "MenuScreen") {
+                    MenuScreen(onNavigateTo = {navController.navigate(it)}, onBack = {navController.navigateUp()})
+                }
+            }
+        }
+    }
+}
+
