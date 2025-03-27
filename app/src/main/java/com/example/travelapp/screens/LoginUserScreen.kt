@@ -75,7 +75,7 @@ fun LoginUserFields(loginUserViewModel: LoginUserViewModel,onNavigateTo: (String
         onClick = {
             if(loginUserViewModel.login()){
                 Toast.makeText(ctx, "Usuario logado com sucesso", Toast.LENGTH_SHORT).show()
-                onNavigateTo("MenuScreen")
+                onNavigateTo("LoggedScreen")
             }
         },
         modifier = Modifier.padding(top = 16.dp)

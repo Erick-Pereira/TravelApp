@@ -6,7 +6,12 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.BottomNavigation
+import androidx.compose.material.BottomNavigationItem
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -15,13 +20,15 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.example.registeruser.screens.RegisterUser
 import com.example.registeruser.screens.RegisterUserScreen
 import com.example.travelapp.screens.LoginUserScreen
-import com.example.travelapp.screens.MenuScreen
+import com.example.travelapp.screens.HomeScreen
+import com.example.travelapp.screens.LoggedScreen
 import com.example.travelapp.ui.theme.TravelAppTheme
 
 class MainActivity : ComponentActivity() {
@@ -70,8 +77,8 @@ fun Activity() {
                 composable(route = "RegisterUserScreen") {
                     RegisterUserScreen(onNavigateTo = { navController.navigate(it) })
                 }
-                composable(route = "MenuScreen") {
-                    MenuScreen(onNavigateTo = {navController.navigate(it)}, onBack = {navController.navigateUp()})
+                composable(route = "LoggedScreen") {
+                    LoggedScreen(onNavigateTo = {navController.navigate(it)}, onBack = {navController.navigateUp()})
                 }
             }
         }
