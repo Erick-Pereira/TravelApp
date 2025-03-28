@@ -26,7 +26,6 @@ import com.example.registeruser.screens.RegisterUserScreen
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoggedScreen(
-    onNavigateTo: (String) -> Unit,
     onBack: () -> Unit
 ) {
     val navController = rememberNavController()
@@ -75,7 +74,7 @@ fun LoggedScreen(
                 composable(route = "HomeScreen") {
                     HomeScreen(
                         onNavigateTo = { navController.navigate(it) },
-                        onBack = { navController.navigateUp() })
+                        onBack = { onBack })
                 }
                 composable(route = "AboutScreen") {
                     AboutScreen()

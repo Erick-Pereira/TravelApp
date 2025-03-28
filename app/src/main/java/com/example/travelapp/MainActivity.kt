@@ -78,7 +78,7 @@ fun Activity() {
                     RegisterUserScreen(onNavigateTo = { navController.navigate(it) })
                 }
                 composable(route = "LoggedScreen") {
-                    LoggedScreen(onNavigateTo = {navController.navigate(it)}, onBack = {navController.navigateUp()})
+                    LoggedScreen( onBack = {navController.navigateUp()})
                 }
             }
         }
