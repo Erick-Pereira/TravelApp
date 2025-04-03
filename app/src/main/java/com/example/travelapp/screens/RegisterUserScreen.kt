@@ -9,6 +9,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -18,12 +19,18 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.registeruser.components.ErrorDialog
 import com.example.registeruser.components.MyTextField
 import com.example.registeruser.components.PasswordTextField
+import com.example.travelapp.database.AppDatabase
+import com.example.travelapp.screens.RegisterUserViewModelFactory
 
 @Composable
 fun RegisterUserScreen(
     onNavigateTo: (String) -> Unit
 ) {
-    val registerUserViewModel: RegisterUserViewModel = viewModel()
+    val ctx = LocalContext.current
+    val userDao =     AppDatabase.getDatabase(ctx).userDao()
+    val registerUserViewModel: RegisterUserViewModel = viewModel(
+        factory = RegisterUserViewModelFactory(userDao)
+    )
 
     Scaffold { paddingValues ->
         Column(
@@ -86,11 +93,7 @@ fun RegisterUserFields(
     val ctx = LocalContext.current
     Button(
         onClick = {
-
-            if (registerUserViewModel.register()) {
-                Toast.makeText(ctx, "Usuario cadastrado com sucesso", Toast.LENGTH_SHORT).show()
-                onNavigateTo("LoginUserScreen")
-            }
+            registerUserViewModel.register()
         },
         modifier = Modifier.padding(top = 16.dp)
     ) {
@@ -99,7 +102,14 @@ fun RegisterUserFields(
     if (registerUser.value.errorMessage.isNotBlank()) {
         ErrorDialog(
             error = registerUser.value.errorMessage,
-            onDismissRequest = { registerUserViewModel.cleanErrorMessage() }
+            onDismissRequest = { registerUserViewModel.cleanDisplayValues() }
         )
+    }
+    LaunchedEffect(registerUser.value.isSaved){
+        if(registerUser.value.isSaved){
+            Toast.makeText(ctx,"User registered",Toast.LENGTH_SHORT).show()
+            registerUserViewModel.cleanDisplayValues();
+            onNavigateTo("LoginUserScreen")
+        }
     }
 }

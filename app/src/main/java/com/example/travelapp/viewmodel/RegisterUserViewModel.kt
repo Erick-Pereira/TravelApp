@@ -1,9 +1,13 @@
 package com.example.registeruser.screens
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.travelapp.dao.UserDao
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import com.example.travelapp.entity.User
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 data class RegisterUser(
     val user: String = "",
@@ -12,21 +16,22 @@ data class RegisterUser(
     var password: String = "",
     val confirmPassword: String = "",
     val errorMessage: String = "",
+    val isSaved: Boolean = false,
 ) {
     fun validateAllFields() {
-        if(user.isBlank()){
+        if (user.isBlank()) {
             throw Exception("User is required")
         }
-        if(name.isBlank()){
+        if (name.isBlank()) {
             throw Exception("Name is required")
         }
-        if(validateEmail().isNotBlank()){
+        if (validateEmail().isNotBlank()) {
             throw Exception(validateEmail())
         }
-        if(validatePassword().isNotBlank()){
+        if (validatePassword().isNotBlank()) {
             throw Exception(validatePassword())
         }
-        if(validateConfirmPassword().isNotBlank()){
+        if (validateConfirmPassword().isNotBlank()) {
             throw Exception(validateConfirmPassword())
         }
     }
@@ -45,21 +50,30 @@ data class RegisterUser(
     }
 
     private fun validateConfirmPassword(): String {
-    if(password.isBlank()){
-        return "Password is required"
-    }
-        return ""
+        if (password.isBlank()) {
+            return "Password is required"
         }
+        return ""
+    }
 
     private fun validatePassword(): String {
-        if(!password.equals(confirmPassword)){
+        if (!password.equals(confirmPassword)) {
             return "Password is not equal"
         }
         return ""
     }
+
+    fun toUser(): User {
+        return User(
+            user = user,
+            name = name,
+            email = email,
+            password = password
+        )
+    }
 }
 
-class RegisterUserViewModel : ViewModel() {
+class RegisterUserViewModel(private val userDao: UserDao) : ViewModel() {
     private val _uiState = MutableStateFlow(RegisterUser())
     val uiState: StateFlow<RegisterUser> = _uiState.asStateFlow()
 
@@ -67,7 +81,7 @@ class RegisterUserViewModel : ViewModel() {
         _uiState.value = _uiState.value.copy(user = user)
     }
 
-    fun onNameChange(name: String){
+    fun onNameChange(name: String) {
         _uiState.value = _uiState.value.copy(name = name)
     }
 
@@ -83,17 +97,19 @@ class RegisterUserViewModel : ViewModel() {
         _uiState.value = _uiState.value.copy(confirmPassword = confirmPassword)
     }
 
-    fun register():Boolean{
-        return try{
+    fun register() {
+        try {
             _uiState.value.validateAllFields()
-            true
-        }catch (e: Exception){
-            _uiState.value = _uiState.value.copy(errorMessage = e.message?: "Unknown error")
-            false
+            viewModelScope.launch {
+                userDao.insert(_uiState.value.toUser());
+                _uiState.value = _uiState.value.copy(isSaved = true)
+            }
+        } catch (e: Exception) {
+            _uiState.value = _uiState.value.copy(errorMessage = e.message ?: "Unknown error")
         }
     }
 
-    fun cleanErrorMessage() {
-        _uiState.value = _uiState.value.copy(errorMessage = "")
+    fun cleanDisplayValues() {
+        _uiState.value = _uiState.value.copy(errorMessage = "", isSaved = false)
     }
 }
