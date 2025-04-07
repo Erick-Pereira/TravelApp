@@ -1,6 +1,5 @@
 package com.example.travelapp.screens
 
-import android.widget.Space
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
@@ -14,6 +13,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,14 +26,19 @@ import com.example.registeruser.components.ErrorDialog
 import com.example.registeruser.components.MyTextField
 import com.example.registeruser.components.PasswordTextField
 import com.example.travelapp.R
+import com.example.travelapp.database.AppDatabase
+import com.example.travelapp.factory.LoginUserViewModelFactory
 import com.example.travelapp.viewmodel.LoginUserViewModel
 
 @Composable
 fun LoginUserScreen(
-    onNavigateTo : (String) -> Unit
-){
-
-    val loginUserViewModel: LoginUserViewModel = viewModel()
+    onNavigateTo: (String) -> Unit
+) {
+    val ctx = LocalContext.current
+    val userDao = AppDatabase.getDatabase(ctx).userDao()
+    val loginUserViewModel: LoginUserViewModel = viewModel(
+        factory = LoginUserViewModelFactory(userDao)
+    )
 
     Scaffold {
         Column(
@@ -51,8 +56,8 @@ fun LoginUserScreen(
                     .padding(bottom = 16.dp),
                 contentScale = ContentScale.Fit
             )
-            LoginUserFields(loginUserViewModel,onNavigateTo)
-            Button(onClick = { onNavigateTo("RegisterUserScreen")}) {
+            LoginUserFields(loginUserViewModel, onNavigateTo)
+            Button(onClick = { onNavigateTo("RegisterUserScreen") }) {
                 Text(text = "Sign up")
             }
         }
@@ -61,31 +66,48 @@ fun LoginUserScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoginUserFields(loginUserViewModel: LoginUserViewModel,onNavigateTo: (String) -> Unit) {
-    val registerUser = loginUserViewModel.uiState.collectAsState()
-    MyTextField(label = "Login", value =
-    registerUser.value.login, onValueChange = {
-        loginUserViewModel.onLoginChange(it)
-    })
-    PasswordTextField(value = registerUser.value.password, onValueChange = {
-        loginUserViewModel.onPasswordChange(it)
-    }, label = "Password")  
+fun LoginUserFields(
+    loginUserViewModel: LoginUserViewModel,
+    onNavigateTo: (String) -> Unit
+) {
+    val loginUser = loginUserViewModel.uiState.collectAsState()
     val ctx = LocalContext.current
+
+    MyTextField(
+        label = "Login",
+        value = loginUser.value.login,
+        onValueChange = {
+            loginUserViewModel.onLoginChange(it)
+        }
+    )
+    PasswordTextField(
+        value = loginUser.value.password,
+        onValueChange = {
+            loginUserViewModel.onPasswordChange(it)
+        },
+        label = "Password"
+    )
     Button(
         onClick = {
-            if(loginUserViewModel.login()){
-                Toast.makeText(ctx, "Usuario logado com sucesso", Toast.LENGTH_SHORT).show()
-                onNavigateTo("LoggedScreen")
-            }
+            loginUserViewModel.login()
         },
         modifier = Modifier.padding(top = 16.dp)
     ) {
         Text(text = "Log in")
     }
-    if(registerUser.value.errorMessage.isNotBlank()){
-        ErrorDialog(error = registerUser.value.errorMessage,
-            onDismissRequest = {loginUserViewModel.cleanErrorMessage()}
+    if (loginUser.value.errorMessage.isNotBlank()) {
+        ErrorDialog(
+            error = loginUser.value.errorMessage,
+            onDismissRequest = { loginUserViewModel.cleanErrorMessage() }
         )
     }
     Spacer(modifier = Modifier.height(16.dp))
+
+    // LaunchedEffect to handle navigation on successful login
+    LaunchedEffect(loginUser.value.isLoggedIn) {
+        if (loginUser.value.isLoggedIn) {
+            Toast.makeText(ctx, "Usuário logado com sucesso", Toast.LENGTH_SHORT).show()
+            onNavigateTo("LoggedScreen")
+        }
+    }
 }

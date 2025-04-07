@@ -1,30 +1,30 @@
 package com.example.travelapp.viewmodel
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.travelapp.dao.UserDao
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 data class LoginUser(
     val login: String = "",
-    var password: String = "",   
+    var password: String = "",
     val errorMessage: String = "",
+    val isLoggedIn: Boolean = false // Adicionado para indicar se o login foi bem-sucedido
 ) {
     fun validateAllFields() {
-        if(validateLogin().isNotBlank()){
-            throw Exception(validateLogin())
+        if (login.isBlank()) {
+            throw Exception("Login é obrigatório")
         }
-    }
-
-    private fun validateLogin(): String {
-        if(login!=password){
-            return "Login ou Senha incorretos"
+        if (password.isBlank()) {
+            throw Exception("Senha é obrigatória")
         }
-        return ""
     }
 }
 
-class LoginUserViewModel : ViewModel() {
+class LoginUserViewModel(private val userDao: UserDao) : ViewModel() {
     private val _uiState = MutableStateFlow(LoginUser())
     val uiState: StateFlow<LoginUser> = _uiState.asStateFlow()
 
@@ -36,13 +36,18 @@ class LoginUserViewModel : ViewModel() {
         _uiState.value = _uiState.value.copy(password = password)
     }
 
-    fun login():Boolean{
-        return try{
-            _uiState.value.validateAllFields()
-            true
-        }catch (e: Exception){
-            _uiState.value = _uiState.value.copy(errorMessage = e.message?: "Unknown error")
-            false
+    fun login() {
+        viewModelScope.launch {
+            try {
+                _uiState.value.validateAllFields()
+                val user = userDao.findByUserAndPassword(_uiState.value.login, _uiState.value.password)
+                if (user == null) {
+                    throw Exception("Usuário ou senha incorretos")
+                }
+                _uiState.value = _uiState.value.copy(isLoggedIn = true, errorMessage = "")
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(isLoggedIn = false, errorMessage = e.message ?: "Erro desconhecido")
+            }
         }
     }
 

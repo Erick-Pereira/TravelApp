@@ -26,9 +26,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.registeruser.screens.RegisterUserScreen
+import com.example.travelapp.screens.AboutScreen
 import com.example.travelapp.screens.LoginUserScreen
 import com.example.travelapp.screens.HomeScreen
 import com.example.travelapp.screens.LoggedScreen
+import com.example.travelapp.screens.Screen1
 import com.example.travelapp.ui.theme.TravelAppTheme
 
 class MainActivity : ComponentActivity() {
@@ -54,9 +56,7 @@ fun Activity() {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = {
-                    Text(text = "TravelApp")
-                },
+                title = { Text(text = "TravelApp") },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                 )
@@ -78,7 +78,19 @@ fun Activity() {
                     RegisterUserScreen(onNavigateTo = { navController.navigate(it) })
                 }
                 composable(route = "LoggedScreen") {
-                    LoggedScreen( onBack = {navController.navigateUp()})
+                    LoggedScreen(onBack = { navController.navigate("LoginUserScreen") })
+                }
+                composable(route = "HomeScreen") {
+                    HomeScreen(
+                        onNavigateTo = { navController.navigate(it) },
+                        onBack = { navController.navigate("LoginUserScreen") }
+                    )
+                }
+                composable(route = "AboutScreen") {
+                    AboutScreen()
+                }
+                composable(route = "Screen1") {
+                    Screen1()
                 }
             }
         }

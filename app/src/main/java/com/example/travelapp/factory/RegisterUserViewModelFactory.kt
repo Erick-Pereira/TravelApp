@@ -1,4 +1,4 @@
-package com.example.travelapp.screens
+package com.example.travelapp.factory
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider

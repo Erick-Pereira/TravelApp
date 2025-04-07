@@ -20,7 +20,7 @@ import com.example.registeruser.components.ErrorDialog
 import com.example.registeruser.components.MyTextField
 import com.example.registeruser.components.PasswordTextField
 import com.example.travelapp.database.AppDatabase
-import com.example.travelapp.screens.RegisterUserViewModelFactory
+import com.example.travelapp.factory.RegisterUserViewModelFactory
 
 @Composable
 fun RegisterUserScreen(

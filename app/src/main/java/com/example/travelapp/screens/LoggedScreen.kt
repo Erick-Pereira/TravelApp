@@ -74,7 +74,8 @@ fun LoggedScreen(
                 composable(route = "HomeScreen") {
                     HomeScreen(
                         onNavigateTo = { navController.navigate(it) },
-                        onBack = { onBack })
+                        onBack = { onBack() }
+                    )
                 }
                 composable(route = "AboutScreen") {
                     AboutScreen()
