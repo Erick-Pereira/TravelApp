@@ -7,6 +7,7 @@ import androidx.room.Query
 import androidx.room.Update
 import androidx.room.Upsert
 import com.example.travelapp.entity.User
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface UserDao {
@@ -28,5 +29,7 @@ interface UserDao {
 
     @Query("select * from user u where u.user = :user and u.password = :password")
     suspend fun findByUserAndPassword(user:String,password:String):User
+    @Query("Select * from user u")
+    fun findAll(): Flow<List<User>>
 
 }

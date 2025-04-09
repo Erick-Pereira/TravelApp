@@ -12,7 +12,7 @@ data class LoginUser(
     val login: String = "",
     var password: String = "",
     val errorMessage: String = "",
-    val isLoggedIn: Boolean = false // Adicionado para indicar se o login foi bem-sucedido
+    val isLoggedIn: Boolean = false
 ) {
     fun validateAllFields() {
         if (login.isBlank()) {

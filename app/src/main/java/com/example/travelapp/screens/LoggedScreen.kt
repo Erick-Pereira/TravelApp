@@ -34,12 +34,12 @@ fun LoggedScreen(
             BottomNavigation {
                 val backStack = navController.currentBackStackEntryAsState();
                 val currentDestination = backStack.value?.destination
-                BottomNavigationItem(selected = currentDestination?.hierarchy?.any { it.route == "HomeScreen" } == true,
-                    onClick = { navController.navigate("HomeScreen") },
+                BottomNavigationItem(selected = currentDestination?.hierarchy?.any { it.route == "RegisterUserListScreen" } == true,
+                    onClick = { navController.navigate("RegisterUserListScreen") },
                     icon = {
                         Icon(
                             imageVector = Icons.Default.Home,
-                            contentDescription = "Home",
+                            contentDescription = "RegisterUserListScreen",
                         )
                     })
                 BottomNavigationItem(
@@ -51,13 +51,12 @@ fun LoggedScreen(
                             contentDescription = "AboutScreen",
                         )
                     })
-                BottomNavigationItem(
-                    selected = currentDestination?.hierarchy?.any { it.route == "Screen1" } == true,
-                    onClick = { navController.navigate("Screen1") },
+                BottomNavigationItem(selected = currentDestination?.hierarchy?.any { it.route == "HomeScreen" } == true,
+                    onClick = { navController.navigate("HomeScreen") },
                     icon = {
                         Icon(
                             imageVector = Icons.Default.Home,
-                            contentDescription = "Screen1",
+                            contentDescription = "Home",
                         )
                     })
             }
@@ -71,17 +70,17 @@ fun LoggedScreen(
                 navController = navController,
                 startDestination = "HomeScreen"
             ) {
+                composable(route = "RegisterUserListScreen") {
+                   RegisterUserListScreen()
+                }
+                composable(route = "AboutScreen") {
+                    AboutScreen()
+                }
                 composable(route = "HomeScreen") {
                     HomeScreen(
                         onNavigateTo = { navController.navigate(it) },
                         onBack = { onBack() }
                     )
-                }
-                composable(route = "AboutScreen") {
-                    AboutScreen()
-                }
-                composable(route = "Screen1") {
-                    Screen1()
                 }
             }
         }
