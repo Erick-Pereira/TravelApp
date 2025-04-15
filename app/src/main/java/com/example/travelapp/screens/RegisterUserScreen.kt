@@ -1,5 +1,6 @@
 package com.example.registeruser.screens
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,8 +25,9 @@ import com.example.travelapp.factory.RegisterUserViewModelFactory
 
 @Composable
 fun RegisterUserScreen(
-    onNavigateTo: (String) -> Unit
+    onNavigateTo: (String) -> Unit, id: Int?
 ) {
+    Log.d("ID","id ${id}")
     val ctx = LocalContext.current
     val userDao =     AppDatabase.getDatabase(ctx).userDao()
     val registerUserViewModel: RegisterUserViewModel = viewModel(

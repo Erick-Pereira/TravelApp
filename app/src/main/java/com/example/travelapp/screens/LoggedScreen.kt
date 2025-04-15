@@ -17,10 +17,12 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable;
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.registeruser.screens.RegisterUserScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -34,8 +36,8 @@ fun LoggedScreen(
             BottomNavigation {
                 val backStack = navController.currentBackStackEntryAsState();
                 val currentDestination = backStack.value?.destination
-                BottomNavigationItem(selected = currentDestination?.hierarchy?.any { it.route == "RegisterUserListScreen" } == true,
-                    onClick = { navController.navigate("RegisterUserListScreen") },
+                BottomNavigationItem(selected = currentDestination?.hierarchy?.any { it.route == "TravelListScreen" } == true,
+                    onClick = { navController.navigate("TravelListScreen") },
                     icon = {
                         Icon(
                             imageVector = Icons.Default.Home,
@@ -70,8 +72,11 @@ fun LoggedScreen(
                 navController = navController,
                 startDestination = "HomeScreen"
             ) {
-                composable(route = "RegisterUserListScreen") {
-                   RegisterUserListScreen()
+                composable(route = "TravelListScreen") {
+                    TravelListScreen(
+                        onEdit = {
+                            navController.navigate("form/${it}")
+                        })
                 }
                 composable(route = "AboutScreen") {
                     AboutScreen()
@@ -81,6 +86,10 @@ fun LoggedScreen(
                         onNavigateTo = { navController.navigate(it) },
                         onBack = { onBack() }
                     )
+                }
+                composable(route = "form", arguments = listOf(navArgument("id") {type = NavType.IntType})) { navBackStackEntry ->
+                    var id = navBackStackEntry.arguments?.getInt("id");
+                    RegisterUserScreen(onNavigateTo = {onBack()}, id = id)
                 }
             }
         }

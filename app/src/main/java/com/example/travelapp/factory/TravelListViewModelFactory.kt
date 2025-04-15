@@ -3,12 +3,12 @@ package com.example.travelapp.factory
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.travelapp.dao.UserDao
-import com.example.travelapp.viewmodel.RegisterUserListViewModel
+import com.example.travelapp.viewmodel.TravelListViewModel
 
-class RegisterUserListViewModelFactory(
+class TravelListViewModelFactory(
     private val userDao: UserDao
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        return RegisterUserListViewModel(userDao) as T
+        return TravelListViewModel(userDao) as T
     }
 }
