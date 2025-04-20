@@ -74,9 +74,9 @@ fun LoggedScreen(
             ) {
                 composable(route = "TravelListScreen") {
                     TravelListScreen(
-                        onEdit = {
-                            navController.navigate("form/${it}")
-                        })
+                        onEdit = { travelId -> navController.navigate("RegisterTravelScreen?travelId=$travelId") },
+                        onAddTravel = { navController.navigate("RegisterTravelScreen?travelId=-1") }
+                    )
                 }
                 composable(route = "AboutScreen") {
                     AboutScreen()
@@ -87,9 +87,28 @@ fun LoggedScreen(
                         onBack = { onBack() }
                     )
                 }
-                composable(route = "form", arguments = listOf(navArgument("id") {type = NavType.IntType})) { navBackStackEntry ->
-                    var id = navBackStackEntry.arguments?.getInt("id");
-                    RegisterUserScreen(onNavigateTo = {onBack()}, id = id)
+                composable(
+                    route = "form?id={id}",
+                    arguments = listOf(navArgument("id") { type = NavType.IntType })
+                ) { navBackStackEntry ->
+                    val id = navBackStackEntry.arguments?.getInt("id")
+                    RegisterUserScreen(onNavigateTo = { onBack() })
+                }
+                composable(
+                    route = "RegisterTravelScreen?travelId={travelId}",
+                    arguments = listOf(navArgument("travelId") {
+                        type = NavType.IntType
+                        defaultValue = -1
+                    })
+                ) { navBackStackEntry ->
+                    val travelId = navBackStackEntry.arguments?.getInt("travelId") ?: -1
+                    RegisterTravelScreen(
+                        travelId = travelId,
+                        onNavigateBack = { navController.navigate("TravelListScreen") }
+                    )
+                }
+                composable(route = "RegisterUserScreen") {
+                    RegisterUserScreen(onNavigateTo = { navController.navigate("LoginUserScreen") })
                 }
             }
         }

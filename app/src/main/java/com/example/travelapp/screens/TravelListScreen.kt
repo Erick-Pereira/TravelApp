@@ -10,9 +10,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
@@ -21,28 +25,36 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.travelapp.database.AppDatabase
-import com.example.travelapp.entity.User
-import com.example.travelapp.factory.TravelListViewModelFactory
-import com.example.travelapp.viewmodel.TravelListViewModel
+import com.example.travelapp.entity.Travel
+import com.example.travelapp.factory.RegisterTravelListViewModelFactory
+import com.example.travelapp.viewmodel.RegisterTravelListViewModel
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-fun TravelListScreen(onEdit: (Int) -> Unit) {
-    val ctx = LocalContext.current;
-    val userDao = AppDatabase.getDatabase(ctx).userDao();
-    val listViewModel: TravelListViewModel = viewModel(
-        factory = TravelListViewModelFactory(userDao)
+fun TravelListScreen(onEdit: (Int) -> Unit, onAddTravel: () -> Unit) {
+    val ctx = LocalContext.current
+    val travelDao = AppDatabase.getDatabase(ctx).travelDao()
+    val listViewModel: RegisterTravelListViewModel = viewModel(
+        factory = RegisterTravelListViewModelFactory(travelDao)
     )
-    val userState = listViewModel.users.collectAsState(initial = emptyList())
+    val travelState = listViewModel.travels.collectAsState(initial = emptyList())
+
     Scaffold(
-        topBar =
-        {
-            TopAppBar(title = { Text(text = "Titulo") })
-        }) {
+        topBar = {
+            TopAppBar(title = { Text(text = "Lista de Viagens") })
+        },
+        floatingActionButton = {
+            FloatingActionButton(onClick = onAddTravel) {
+                Icon(imageVector = Icons.Default.Add, contentDescription = "Adicionar Viagem")
+            }
+        }
+    ) {
         Column(modifier = Modifier.padding(it)) {
             LazyColumn {
-                items(items = userState.value) { user ->
-                    ItemUser(user,onEdit = {onEdit(it)})
+                items(items = travelState.value) { travel ->
+                    ItemTravel(travel, onEdit = { travelId ->
+                        onEdit(travelId)
+                    })
                 }
             }
         }
@@ -50,26 +62,27 @@ fun TravelListScreen(onEdit: (Int) -> Unit) {
 }
 
 @Composable
-fun ItemUser(user: User,onEdit: (Int) -> Unit) {
+fun ItemTravel(travel: Travel, onEdit: (Int) -> Unit) {
     Card(
         modifier = Modifier
             .padding(16.dp)
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onLongPress = {
+                        onEdit(travel.id)
+                    }
+                )
+            },
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Column(modifier = Modifier
-            .padding(8.dp)
-            .pointerInput(Unit) {
-
-                detectTapGestures (
-                    onLongPress = {
-                        onEdit(user.id)
-                    }
-                )
-            })
-        {
-            Text(text = user.name)
+        Column(
+            modifier = Modifier.padding(8.dp)
+        ) {
+            Text(text = travel.destination)
+            Text(text = "Tipo: ${travel.travelType}")
+            Text(text = "Orçamento: R$ ${travel.budget}")
         }
     }
 }

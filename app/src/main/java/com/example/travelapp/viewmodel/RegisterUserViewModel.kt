@@ -101,7 +101,7 @@ class RegisterUserViewModel(private val userDao: UserDao) : ViewModel() {
         try {
             _uiState.value.validateAllFields()
             viewModelScope.launch {
-                userDao.insert(_uiState.value.toUser());
+                userDao.insert(_uiState.value.toUser())
                 _uiState.value = _uiState.value.copy(isSaved = true)
             }
         } catch (e: Exception) {

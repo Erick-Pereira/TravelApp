@@ -25,11 +25,10 @@ import com.example.travelapp.factory.RegisterUserViewModelFactory
 
 @Composable
 fun RegisterUserScreen(
-    onNavigateTo: (String) -> Unit, id: Int?
+    onNavigateTo: (String) -> Unit
 ) {
-    Log.d("ID","id ${id}")
     val ctx = LocalContext.current
-    val userDao =     AppDatabase.getDatabase(ctx).userDao()
+    val userDao = AppDatabase.getDatabase(ctx).userDao()
     val registerUserViewModel: RegisterUserViewModel = viewModel(
         factory = RegisterUserViewModelFactory(userDao)
     )
@@ -107,9 +106,9 @@ fun RegisterUserFields(
             onDismissRequest = { registerUserViewModel.cleanDisplayValues() }
         )
     }
-    LaunchedEffect(registerUser.value.isSaved){
-        if(registerUser.value.isSaved){
-            Toast.makeText(ctx,"User registered",Toast.LENGTH_SHORT).show()
+    LaunchedEffect(registerUser.value.isSaved) {
+        if (registerUser.value.isSaved) {
+            Toast.makeText(ctx, "User registered", Toast.LENGTH_SHORT).show()
             registerUserViewModel.cleanDisplayValues();
             onNavigateTo("LoginUserScreen")
         }

@@ -25,11 +25,14 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import androidx.navigation.NavType
 import com.example.registeruser.screens.RegisterUserScreen
 import com.example.travelapp.screens.AboutScreen
 import com.example.travelapp.screens.LoginUserScreen
 import com.example.travelapp.screens.HomeScreen
 import com.example.travelapp.screens.LoggedScreen
+import com.example.travelapp.screens.RegisterTravelScreen
 import com.example.travelapp.screens.Screen1
 import com.example.travelapp.ui.theme.TravelAppTheme
 
@@ -75,7 +78,7 @@ fun Activity() {
                     LoginUserScreen(onNavigateTo = { navController.navigate(it) })
                 }
                 composable(route = "RegisterUserScreen") {
-                    RegisterUserScreen(onNavigateTo = { navController.navigate(it),null })
+                    RegisterUserScreen(onNavigateTo = { navController.navigate(it) })
                 }
                 composable(route = "LoggedScreen") {
                     LoggedScreen(onBack = { navController.navigate("LoginUserScreen") })
@@ -91,6 +94,32 @@ fun Activity() {
                 }
                 composable(route = "Screen1") {
                     Screen1()
+                }
+                composable(
+                    route = "form?id={id}",
+                    arguments = listOf(navArgument("id") {
+                        type = NavType.IntType
+                        defaultValue = -1 // Valor padrão para quando o argumento não for fornecido
+                    })
+                ) { navBackStackEntry ->
+                    val id = navBackStackEntry.arguments?.getInt("id") ?: -1
+                    RegisterTravelScreen(
+                        travelId = id,
+                        onNavigateBack = { navController.navigate("TravelListScreen") }
+                    )
+                }
+                composable(
+                    route = "RegisterTravelScreen?travelId={travelId}",
+                    arguments = listOf(navArgument("travelId") {
+                        type = NavType.IntType
+                        defaultValue = -1 // Define -1 como valor padrão para novas viagens
+                    })
+                ) { navBackStackEntry ->
+                    val travelId = navBackStackEntry.arguments?.getInt("travelId") ?: -1
+                    RegisterTravelScreen(
+                        travelId = travelId,
+                        onNavigateBack = { navController.navigate("TravelListScreen") }
+                    )
                 }
             }
         }
