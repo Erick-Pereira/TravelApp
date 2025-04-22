@@ -18,8 +18,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.registeruser.components.MyTextField
+import com.example.travelapp.components.DatePickerField
 import com.example.travelapp.components.EnumDropdown
-import com.example.travelapp.components.MaskedDateField
 import com.example.travelapp.database.AppDatabase
 import com.example.travelapp.enums.EnumTravelType
 import com.example.travelapp.factory.RegisterTravelListViewModelFactory
@@ -69,17 +69,17 @@ fun RegisterTravelScreen(
                         if (it == "Lazer") EnumTravelType.LAZER else EnumTravelType.NEGOCIOS
                     registerTravelViewModel.onTravelTypeChange(enumValue)
                 })
-            MaskedDateField(
+            DatePickerField(
                 label = "Data de Início",
-                value = travelState.value.startDate?.let { dateFormat.format(it) } ?: "",
-                onValueChange = { newDate ->
+                date = travelState.value.startDate?.let { dateFormat.format(it) } ?: "",
+                onDateSelected = { newDate ->
                     registerTravelViewModel.onStartDateChange(newDate)
                 }
             )
-            MaskedDateField(
+            DatePickerField(
                 label = "Data de Término",
-                value = travelState.value.endDate?.let { dateFormat.format(it) } ?: "",
-                onValueChange = { newDate ->
+                date = travelState.value.endDate?.let { dateFormat.format(it) } ?: "",
+                onDateSelected = { newDate ->
                     registerTravelViewModel.onEndDateChange(newDate)
                 }
             )

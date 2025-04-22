@@ -7,13 +7,11 @@ import java.time.Instant
 import java.util.Date
 
 @Entity
-class Travel(
+data class Travel(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val destination: String = "",
     val travelType: EnumTravelType,
     val startDate: Date = Date(),
     val endDate: Date = Date(),
     val budget: Double = 0.0
-) {
-
-}
+)
