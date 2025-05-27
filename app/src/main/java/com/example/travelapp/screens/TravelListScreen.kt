@@ -28,6 +28,12 @@ import com.example.travelapp.database.AppDatabase
 import com.example.travelapp.entity.Travel
 import com.example.travelapp.factory.RegisterTravelListViewModelFactory
 import com.example.travelapp.viewmodel.RegisterTravelListViewModel
+import androidx.compose.material3.DismissDirection
+import androidx.compose.material3.DismissValue
+import androidx.compose.material3.SwipeToDismiss
+import androidx.compose.material3.rememberDismissState
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -38,6 +44,7 @@ fun TravelListScreen(onEdit: (Int) -> Unit, onAddTravel: () -> Unit) {
         factory = RegisterTravelListViewModelFactory(travelDao)
     )
     val travelState = listViewModel.travels.collectAsState(initial = emptyList())
+    val coroutineScope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
@@ -51,10 +58,29 @@ fun TravelListScreen(onEdit: (Int) -> Unit, onAddTravel: () -> Unit) {
     ) {
         Column(modifier = Modifier.padding(it)) {
             LazyColumn {
-                items(items = travelState.value) { travel ->
-                    ItemTravel(travel, onEdit = { travelId ->
-                        onEdit(travelId)
-                    })
+                items(items = travelState.value, key = { travel -> travel.id }) { travel ->
+                    val dismissState = rememberDismissState(
+                        confirmValueChange = { dismissValue ->
+                            if (dismissValue == DismissValue.DismissedToEnd || dismissValue == DismissValue.DismissedToStart) {
+                                coroutineScope.launch {
+                                    listViewModel.deleteTravel(travel)
+                                }
+                                true
+                            } else {
+                                false
+                            }
+                        }
+                    )
+                    SwipeToDismiss(
+                        state = dismissState,
+                        directions = setOf(DismissDirection.EndToStart, DismissDirection.StartToEnd),
+                        background = {},
+                        dismissContent = {
+                            ItemTravel(travel, onEdit = { travelId ->
+                                onEdit(travelId)
+                            })
+                        }
+                    )
                 }
             }
         }

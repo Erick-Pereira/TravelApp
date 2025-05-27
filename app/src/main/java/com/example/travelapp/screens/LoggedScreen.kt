@@ -70,7 +70,7 @@ fun LoggedScreen(
         ) {
             NavHost(
                 navController = navController,
-                startDestination = "HomeScreen"
+                startDestination = "TravelListScreen"
             ) {
                 composable(route = "TravelListScreen") {
                     TravelListScreen(

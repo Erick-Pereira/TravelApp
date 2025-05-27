@@ -139,4 +139,10 @@ class RegisterTravelListViewModel(private val travelDao: TravelDao) : ViewModel(
             }
         }
     }
+
+    fun deleteTravel(travel: Travel) {
+        viewModelScope.launch {
+            travelDao.delete(travel)
+        }
+    }
 }
