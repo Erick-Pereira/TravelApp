@@ -54,6 +54,9 @@ android {
 dependencies {
     implementation("androidx.navigation:navigation-compose:2.8.9")
     implementation("com.google.firebase:firebase-firestore-ktx:25.1.3")
+    implementation("androidx.benchmark:benchmark-macro:1.3.4")
+    implementation("com.google.ai.client.generativeai:generativeai:0.6.0")
+    implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
     val lifecycle_version = "2.8.7"
     val room_version = "2.6.1"
 
