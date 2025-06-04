@@ -55,6 +55,9 @@ class RegisterTravelListViewModel(private val travelDao: TravelDao) : ViewModel(
 
     val travels: Flow<List<Travel>> = travelDao.findAll()
 
+    // Variável temporária para compartilhar o roteiro entre telas
+    var roteiroTemp: String? = null
+
     fun onDestinationChange(destination: String) {
         _uiState.value = _uiState.value.copy(destination = destination)
     }
@@ -143,6 +146,16 @@ class RegisterTravelListViewModel(private val travelDao: TravelDao) : ViewModel(
     fun deleteTravel(travel: Travel) {
         viewModelScope.launch {
             travelDao.delete(travel)
+        }
+    }
+
+    fun updateTravelRoteiro(travelId: Int, roteiro: String) {
+        viewModelScope.launch {
+            val travel = travelDao.findById(travelId)
+            if (travel != null) {
+                val updatedTravel = travel.copy(script = roteiro)
+                travelDao.update(updatedTravel)
+            }
         }
     }
 }

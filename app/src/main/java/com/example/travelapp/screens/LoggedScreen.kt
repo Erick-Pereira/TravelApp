@@ -1,5 +1,7 @@
 package com.example.travelapp.screens;
 
+import AdjustPromptScreen
+import ShowScriptScreen
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.BottomNavigation
@@ -24,6 +26,9 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.registeruser.screens.RegisterUserScreen
+import com.example.travelapp.factory.RegisterTravelListViewModelFactory
+import com.example.travelapp.database.AppDatabase
+import androidx.compose.ui.platform.LocalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -102,13 +107,75 @@ fun LoggedScreen(
                     })
                 ) { navBackStackEntry ->
                     val travelId = navBackStackEntry.arguments?.getInt("travelId") ?: -1
+                    val ctx = LocalContext.current
+                    val travelDao = AppDatabase.getDatabase(ctx).travelDao()
+                    val registerTravelViewModel: com.example.travelapp.viewmodel.RegisterTravelListViewModel =
+                        androidx.lifecycle.viewmodel.compose.viewModel(
+                            factory = RegisterTravelListViewModelFactory(travelDao)
+                        )
                     RegisterTravelScreen(
                         travelId = travelId,
-                        onNavigateBack = { navController.navigate("TravelListScreen") }
+                        onNavigateBack = { navController.navigate("TravelListScreen") },
+                        onNavigateToAdjustPrompt = { prompt, travelId ->
+                            registerTravelViewModel.roteiroTemp = prompt
+                            navController.navigate("AdjustPromptScreen?travelId=$travelId")
+                        }
                     )
                 }
                 composable(route = "RegisterUserScreen") {
                     RegisterUserScreen(onNavigateTo = { navController.navigate("LoginUserScreen") })
+                }
+                composable(
+                    route = "AdjustPromptScreen?travelId={travelId}",
+                    arguments = listOf(
+                        navArgument("travelId") { type = NavType.IntType; defaultValue = -1 }
+                    )
+                ) { navBackStackEntry ->
+                    val travelId = navBackStackEntry.arguments?.getInt("travelId") ?: -1
+                    val ctx = LocalContext.current
+                    val travelDao = AppDatabase.getDatabase(ctx).travelDao()
+                    val registerTravelViewModel: com.example.travelapp.viewmodel.RegisterTravelListViewModel =
+                        androidx.lifecycle.viewmodel.compose.viewModel(
+                            factory = RegisterTravelListViewModelFactory(travelDao)
+                        )
+                    val roteiro = registerTravelViewModel.roteiroTemp ?: ""
+                    AdjustPromptScreen(
+                        initialPrompt = roteiro,
+                        travelId = travelId,
+                        onPromptAdjusted = { adjustedScript ->
+                            registerTravelViewModel.roteiroTemp = adjustedScript
+                            navController.navigate("ShowScriptScreen?travelId=$travelId")
+                        },
+                        onBack = { navController.popBackStack() }
+                    )
+                }
+                composable(
+                    route = "ShowScriptScreen?travelId={travelId}",
+                    arguments = listOf(
+                        navArgument("travelId") { type = NavType.IntType; defaultValue = -1 }
+                    )
+                ) { navBackStackEntry ->
+                    val travelId = navBackStackEntry.arguments?.getInt("travelId") ?: -1
+                    val ctx = LocalContext.current
+                    val travelDao = AppDatabase.getDatabase(ctx).travelDao()
+                    val registerTravelViewModel: com.example.travelapp.viewmodel.RegisterTravelListViewModel =
+                        androidx.lifecycle.viewmodel.compose.viewModel(
+                            factory = RegisterTravelListViewModelFactory(travelDao)
+                        )
+                    val roteiro = registerTravelViewModel.roteiroTemp ?: ""
+                    ShowScriptScreen(
+                        script = roteiro,
+                        onAccept = {
+                            // Salve o roteiro no banco se quiser
+                            navController.navigate("TravelListScreen")
+                        },
+                        onReject = {
+                            navController.navigate("TravelListScreen")
+                        },
+                        onAdjust = {
+                            navController.navigate("AdjustPromptScreen?travelId=$travelId")
+                        }
+                    )
                 }
             }
         }

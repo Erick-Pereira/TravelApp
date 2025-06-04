@@ -13,5 +13,6 @@ data class Travel(
     val travelType: EnumTravelType,
     val startDate: Date = Date(),
     val endDate: Date = Date(),
-    val budget: Double = 0.0
+    val budget: Double = 0.0,
+    val script: String = ""
 )

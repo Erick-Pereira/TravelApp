@@ -1,5 +1,7 @@
 package com.example.travelapp
 
+import AdjustPromptScreen
+import ShowScriptScreen
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -35,6 +37,10 @@ import com.example.travelapp.screens.LoggedScreen
 import com.example.travelapp.screens.RegisterTravelScreen
 import com.example.travelapp.screens.Screen1
 import com.example.travelapp.ui.theme.TravelAppTheme
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
+import com.example.travelapp.viewmodel.RegisterTravelListViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -99,26 +105,63 @@ fun Activity() {
                     route = "form?id={id}",
                     arguments = listOf(navArgument("id") {
                         type = NavType.IntType
-                        defaultValue = -1 // Valor padrão para quando o argumento não for fornecido
+                        defaultValue = -1
                     })
                 ) { navBackStackEntry ->
                     val id = navBackStackEntry.arguments?.getInt("id") ?: -1
+                    val registerTravelViewModel: RegisterTravelListViewModel = viewModel()
                     RegisterTravelScreen(
                         travelId = id,
-                        onNavigateBack = { navController.navigate("TravelListScreen") }
+                        onNavigateBack = { navController.navigate("TravelListScreen") },
+                        onNavigateToShowScript = { prompt, travelId ->
+                            registerTravelViewModel.roteiroTemp = prompt
+                            navController.navigate("ShowScriptScreen?travelId=$travelId")
+                        }
                     )
                 }
                 composable(
                     route = "RegisterTravelScreen?travelId={travelId}",
                     arguments = listOf(navArgument("travelId") {
                         type = NavType.IntType
-                        defaultValue = -1 // Define -1 como valor padrão para novas viagens
+                        defaultValue = -1
                     })
                 ) { navBackStackEntry ->
                     val travelId = navBackStackEntry.arguments?.getInt("travelId") ?: -1
+                    val registerTravelViewModel: RegisterTravelListViewModel = viewModel()
                     RegisterTravelScreen(
                         travelId = travelId,
-                        onNavigateBack = { navController.navigate("TravelListScreen") }
+                        onNavigateBack = { navController.navigate("TravelListScreen") },
+                        onNavigateToShowScript = { roteiro, travelId ->
+                            registerTravelViewModel.roteiroTemp = roteiro
+                            navController.navigate("ShowScriptScreen?travelId=$travelId")
+                        }
+                    )
+                }
+                composable(
+                    route = "ShowScriptScreen?travelId={travelId}",
+                    arguments = listOf(
+                        navArgument("travelId") { type = NavType.IntType; defaultValue = -1 }
+                    )
+                ) { navBackStackEntry ->
+                    val travelId = navBackStackEntry.arguments?.getInt("travelId") ?: -1
+                    val registerTravelViewModel: RegisterTravelListViewModel = viewModel()
+                    val script = registerTravelViewModel.roteiroTemp ?: ""
+                    ShowScriptScreen(
+                        script = script,
+                        onAccept = {
+                            // Salvar o roteiro no banco de dados
+                            // Exemplo: registerTravelViewModel.updateTravelScript(travelId, script)
+                            // Voltar para a lista ou tela anterior
+                            navController.navigate("TravelListScreen")
+                        },
+                        onReject = {
+                            // Voltar para a tela de ajuste
+                            navController.navigate("TravelListScreen")
+                        },
+                        onAdjust = {
+                            // Voltar para a tela de ajuste
+                            navController.navigate("AdjustPromptScreen?travelId=$travelId")
+                        }
                     )
                 }
             }

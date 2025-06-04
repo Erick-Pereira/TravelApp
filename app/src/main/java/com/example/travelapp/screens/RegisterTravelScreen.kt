@@ -4,14 +4,11 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.AlertDialog
-import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -43,7 +40,7 @@ import java.util.Locale
 fun RegisterTravelScreen(
     travelId: Int,
     onNavigateBack: () -> Unit,
-    onNavigateToAdjustPrompt: (String, Int) -> Unit
+    onNavigateToShowScript: (String, Int) -> Unit
 ) {
     val ctx = LocalContext.current
     val travelDao = AppDatabase.getDatabase(ctx).travelDao()
@@ -61,7 +58,6 @@ fun RegisterTravelScreen(
     }
 
     val coroutineScope = rememberCoroutineScope()
-    var showDialog by remember { mutableStateOf(false) }
     var roteiro by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
 
@@ -128,7 +124,6 @@ fun RegisterTravelScreen(
                 onClick = {
                     isLoading = true
                     coroutineScope.launch {
-                        // Chamada real da API Gemini
                         roteiro = gerarRoteiroComGemini(
                             ctx,
                             destino = travelState.value.destination,
@@ -138,35 +133,14 @@ fun RegisterTravelScreen(
                             orcamento = travelState.value.budget
                         )
                         isLoading = false
-                        showDialog = true
+                        // Salva o roteiro temporariamente no ViewModel
+                        registerTravelViewModel.roteiroTemp = roteiro
+                        onNavigateToShowScript(roteiro, travelId)
                     }
                 },
                 modifier = Modifier.padding(top = 16.dp)
             ) {
                 Text("Gerar Roteiro com IA")
-            }
-
-            if (showDialog) {
-                AlertDialog(
-                    onDismissRequest = { showDialog = false },
-                    title = { Text("Roteiro Gerado") },
-                    text = { Text(roteiro) },
-                    confirmButton = {
-                        TextButton(onClick = {
-                            // Salve o roteiro ou associe ao objeto viagem
-                            showDialog = false
-                        }) { Text("Aceitar") }
-                    },
-                    dismissButton = {
-                        Row {
-                            TextButton(onClick = { showDialog = false }) { Text("Rejeitar") }
-                            TextButton(onClick = {
-                                showDialog = false
-                                onNavigateToAdjustPrompt(roteiro, travelId)
-                            }) { Text("Ajustar") }
-                        }
-                    }
-                )
             }
 
             if (isLoading) {

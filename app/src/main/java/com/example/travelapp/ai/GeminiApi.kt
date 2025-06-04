@@ -16,7 +16,7 @@ suspend fun gerarRoteiroComGemini(
 ): String = withContext(Dispatchers.IO) {
     val apiKey = ApiKeyProvider.getGeminiApiKey(context)
     val generativeModel = GenerativeModel(
-        modelName = "gemini-pro",
+        modelName = "gemini-1.5-flash",
         apiKey = apiKey
     )
 
