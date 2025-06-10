@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
@@ -75,10 +76,11 @@ fun RegisterTravelScreen(
     }
 
     val coroutineScope = rememberCoroutineScope()
-    var roteiro by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
-    var isDialogOpen by remember { mutableStateOf(false) }
+    var showScriptScreen by remember { mutableStateOf(false) }
     var aiSuggestion by remember { mutableStateOf("") }
+    var showAdjustPromptDialog by remember { mutableStateOf(false) }
+    var adjustPrompt by remember { mutableStateOf("") }
 
     Scaffold {
         Column(
@@ -119,6 +121,29 @@ fun RegisterTravelScreen(
             MyTextField(label = "Orçamento",
                 value = travelState.value.budget.toString(),
                 onValueChange = { registerTravelViewModel.onBudgetChange(it.toDouble()) })
+
+            // Exibe o roteiro se já existir (somente leitura)
+            if (travelState.value.script.isNotBlank()) {
+                Text(
+                    text = "Roteiro:",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(top = 16.dp)
+                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 100.dp, max = 300.dp)
+                        .padding(8.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    Text(
+                        text = travelState.value.script,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
+
             if (travelState.value.errorMessage.isNotBlank()) {
                 Text(
                     text = travelState.value.errorMessage,
@@ -139,70 +164,134 @@ fun RegisterTravelScreen(
                     onNavigateBack()
                 }
             }
-            Button(
-                onClick = {
-                isDialogOpen = true
 
-                if (travelState.value.script == ""){
-                    isLoading = true
-
-                    CoroutineScope(Dispatchers.IO).launch {
-                        try {
-                            val sugestao = gerarRoteiroComGemini(ctx, travelState.value.destination, travelState.value.travelType.toString(), travelState.value.startDate, travelState.value.endDate,travelState.value.budget)
-
-                            registerTravelViewModel.updateTravelRoteiro(travelId,sugestao)
-
-                            withContext(Dispatchers.Main) {
+            // Só mostra o botão de sugestão se não houver roteiro ainda
+            if (travelState.value.script.isBlank()) {
+                Button(
+                    onClick = {
+                        isLoading = true
+                        coroutineScope.launch {
+                            try {
+                                val sugestao = gerarRoteiroComGemini(
+                                    ctx,
+                                    travelState.value.destination,
+                                    travelState.value.travelType.toString(),
+                                    travelState.value.startDate,
+                                    travelState.value.endDate,
+                                    travelState.value.budget
+                                )
                                 aiSuggestion = sugestao
-                            }
-                        } catch (e: Exception) {
-                            withContext(Dispatchers.Main) {
+                                showScriptScreen = true
+                            } catch (e: Exception) {
                                 aiSuggestion = "Erro ao gerar sugestão: ${e.message}"
+                                showScriptScreen = true
+                            } finally {
+                                isLoading = false
                             }
-                        } finally {
-                            isLoading = false
                         }
+                    },
+                    enabled = !isLoading,
+                    modifier = Modifier
+                        .wrapContentWidth()
+                        .padding(top = 16.dp)
+                ) {
+                    if (isLoading) {
+                        CircularProgressIndicator(modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
                     }
-                } else {
-                    aiSuggestion = travelState.value.script
+                    Text("Sugestão de Roteiro")
                 }
-            },
-                modifier = Modifier.wrapContentWidth()
-            ) {
-                Text("Sugestão de Roteiro")
             }
 
-            if (isDialogOpen) {
+            // Tela/modal para mostrar o roteiro gerado pela IA
+            if (showScriptScreen) {
                 AlertDialog(
-                    onDismissRequest = { isDialogOpen = false },
-                    confirmButton = {
-                        TextButton(onClick = { isDialogOpen = false }) {
-                            Text("Fechar")
+                    onDismissRequest = { showScriptScreen = false },
+                    title = { Text("Roteiro Gerado") },
+                    text = {
+                        Box(
+                            modifier = Modifier
+                                .heightIn(max = 300.dp)
+                                .verticalScroll(rememberScrollState())
+                        ) {
+                            Text(aiSuggestion)
                         }
                     },
-                    title = {
-                        Text("Sugestões de Destinos")
-                    },
-                    text = {
-                        if (isLoading) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center,
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                CircularProgressIndicator()
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Text("Gerando sugestões...")
-                            }
-                        } else {
+                    confirmButton = {
+                        Row {
+                            TextButton(
+                                onClick = {
+                                    // Aceitar: salva o roteiro
+                                    registerTravelViewModel.updateTravelRoteiro(travelId, aiSuggestion)
+                                    showScriptScreen = false
+                                }
+                            ) { Text("Aceitar") }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            TextButton(
+                                onClick = {
+                                    // Ajustar: abre modal para ajuste do prompt
+                                    adjustPrompt = ""
+                                    showScriptScreen = false
+                                    showAdjustPromptDialog = true
+                                }
+                            ) { Text("Ajustar") }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            TextButton(
+                                onClick = {
+                                    // Rejeitar: apenas fecha
+                                    showScriptScreen = false
+                                }
+                            ) { Text("Rejeitar") }
+                        }
+                    }
+                )
+            }
 
-                            Box(
-                                modifier = Modifier
-                                    .heightIn(max = 200.dp)
-                                    .verticalScroll(rememberScrollState())
-                            ) {
-                                Text(aiSuggestion)
+            // Modal para ajustar o prompt
+            if (showAdjustPromptDialog) {
+                AlertDialog(
+                    onDismissRequest = { showAdjustPromptDialog = false },
+                    title = { Text("Ajustar Prompt") },
+                    text = {
+                        Column {
+                            MyTextField(
+                                label = "Prompt",
+                                value = adjustPrompt,
+                                onValueChange = { adjustPrompt = it }
+                            )
+                        }
+                    },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                // Gera novo roteiro com prompt ajustado
+                                isLoading = true
+                                showAdjustPromptDialog = false
+                                coroutineScope.launch {
+                                    try {
+                                        val sugestao = gerarRoteiroComGemini(
+                                            ctx,
+                                            adjustPrompt.ifBlank { travelState.value.destination },
+                                            travelState.value.travelType.toString(),
+                                            travelState.value.startDate,
+                                            travelState.value.endDate,
+                                            travelState.value.budget
+                                        )
+                                        aiSuggestion = sugestao
+                                        showScriptScreen = true
+                                    } catch (e: Exception) {
+                                        aiSuggestion = "Erro ao gerar sugestão: ${e.message}"
+                                        showScriptScreen = true
+                                    } finally {
+                                        isLoading = false
+                                    }
+                                }
                             }
+                        ) { Text("Gerar Novo Roteiro") }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showAdjustPromptDialog = false }) {
+                            Text("Cancelar")
                         }
                     }
                 )
