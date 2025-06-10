@@ -24,6 +24,7 @@ data class RegisterTravel(
     val budget: Double = 0.0,
     val errorMessage: String = "",
     val isSaved: Boolean = false,
+    val script: String = "",
 ) {
     fun validateAllFields() {
         if (destination.isBlank()) {
@@ -44,7 +45,8 @@ data class RegisterTravel(
             travelType = travelType,
             startDate = startDate,
             endDate = endDate ?: startDate,
-            budget = budget
+            budget = budget,
+            script = script
         )
     }
 }
@@ -55,7 +57,6 @@ class RegisterTravelListViewModel(private val travelDao: TravelDao) : ViewModel(
 
     val travels: Flow<List<Travel>> = travelDao.findAll()
 
-    // Variável temporária para compartilhar o roteiro entre telas
     var roteiroTemp: String? = null
 
     fun onDestinationChange(destination: String) {
@@ -88,6 +89,10 @@ class RegisterTravelListViewModel(private val travelDao: TravelDao) : ViewModel(
             // Handle invalid date input - maybe show an error message
             _uiState.value = _uiState.value.copy(errorMessage = "Invalid end date format")
         }
+    }
+
+    fun onScriptChange(script: String) {
+        _uiState.value = _uiState.value.copy(script = script)
     }
 
     private fun parseDate(dateString: String): Date? {
@@ -133,7 +138,8 @@ class RegisterTravelListViewModel(private val travelDao: TravelDao) : ViewModel(
                     travelType = travel.travelType,
                     startDate = travel.startDate,
                     endDate = travel.endDate,
-                    budget = travel.budget
+                    budget = travel.budget,
+                    script = travel.script
                 )
             } else {
                 _uiState.value = _uiState.value.copy(

@@ -1,14 +1,27 @@
 package com.example.travelapp.screens
 
 import android.widget.Toast
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -30,17 +43,21 @@ import com.example.travelapp.enums.EnumTravelType
 import com.example.travelapp.factory.RegisterTravelListViewModelFactory
 import com.example.travelapp.viewmodel.RegisterTravelListViewModel
 import com.example.travelapp.ai.gerarRoteiroComGemini
+import com.example.travelapp.entity.Travel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.math.absoluteValue
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterTravelScreen(
     travelId: Int,
-    onNavigateBack: () -> Unit,
-    onNavigateToShowScript: (String, Int) -> Unit
+    onNavigateBack: () -> Unit
 ) {
     val ctx = LocalContext.current
     val travelDao = AppDatabase.getDatabase(ctx).travelDao()
@@ -60,6 +77,8 @@ fun RegisterTravelScreen(
     val coroutineScope = rememberCoroutineScope()
     var roteiro by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
+    var isDialogOpen by remember { mutableStateOf(false) }
+    var aiSuggestion by remember { mutableStateOf("") }
 
     Scaffold {
         Column(
@@ -122,30 +141,71 @@ fun RegisterTravelScreen(
             }
             Button(
                 onClick = {
+                isDialogOpen = true
+
+                if (travelState.value.script == ""){
                     isLoading = true
-                    coroutineScope.launch {
-                        roteiro = gerarRoteiroComGemini(
-                            ctx,
-                            destino = travelState.value.destination,
-                            tipo = travelState.value.travelType.toString(),
-                            dataInicio = travelState.value.startDate,
-                            dataFim = travelState.value.endDate,
-                            orcamento = travelState.value.budget
-                        )
-                        isLoading = false
-                        // Salva o roteiro temporariamente no ViewModel
-                        registerTravelViewModel.roteiroTemp = roteiro
-                        onNavigateToShowScript(roteiro, travelId)
+
+                    CoroutineScope(Dispatchers.IO).launch {
+                        try {
+                            val sugestao = gerarRoteiroComGemini(ctx, travelState.value.destination, travelState.value.travelType.toString(), travelState.value.startDate, travelState.value.endDate,travelState.value.budget)
+
+                            registerTravelViewModel.updateTravelRoteiro(travelId,sugestao)
+
+                            withContext(Dispatchers.Main) {
+                                aiSuggestion = sugestao
+                            }
+                        } catch (e: Exception) {
+                            withContext(Dispatchers.Main) {
+                                aiSuggestion = "Erro ao gerar sugestão: ${e.message}"
+                            }
+                        } finally {
+                            isLoading = false
+                        }
                     }
-                },
-                modifier = Modifier.padding(top = 16.dp)
+                } else {
+                    aiSuggestion = travelState.value.script
+                }
+            },
+                modifier = Modifier.wrapContentWidth()
             ) {
-                Text("Gerar Roteiro com IA")
+                Text("Sugestão de Roteiro")
             }
 
-            if (isLoading) {
-                // Exiba um indicador de carregamento se desejar
-                Text("Gerando roteiro...")
+            if (isDialogOpen) {
+                AlertDialog(
+                    onDismissRequest = { isDialogOpen = false },
+                    confirmButton = {
+                        TextButton(onClick = { isDialogOpen = false }) {
+                            Text("Fechar")
+                        }
+                    },
+                    title = {
+                        Text("Sugestões de Destinos")
+                    },
+                    text = {
+                        if (isLoading) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                CircularProgressIndicator()
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Text("Gerando sugestões...")
+                            }
+                        } else {
+
+                            Box(
+                                modifier = Modifier
+                                    .heightIn(max = 200.dp)
+                                    .verticalScroll(rememberScrollState())
+                            ) {
+                                Text(aiSuggestion)
+                            }
+                        }
+                    }
+                )
             }
         }
     }

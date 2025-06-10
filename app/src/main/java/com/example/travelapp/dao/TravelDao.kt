@@ -29,4 +29,7 @@ interface TravelDao {
 
     @Query("Select * from travel t")
     fun findAll(): Flow<List<Travel>>
+
+    @Query("UPDATE travel SET script = :script WHERE id = :travelId")
+    suspend fun updateSuggestion(travelId: Int, script: String)
 }
