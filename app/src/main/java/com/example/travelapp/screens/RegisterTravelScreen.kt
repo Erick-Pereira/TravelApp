@@ -1,13 +1,12 @@
 package com.example.travelapp.screens
 
-import android.widget.Toast
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -44,15 +43,9 @@ import com.example.travelapp.enums.EnumTravelType
 import com.example.travelapp.factory.RegisterTravelListViewModelFactory
 import com.example.travelapp.viewmodel.RegisterTravelListViewModel
 import com.example.travelapp.ai.gerarRoteiroComGemini
-import com.example.travelapp.entity.Travel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
-import kotlin.math.absoluteValue
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -87,7 +80,8 @@ fun RegisterTravelScreen(
             modifier = Modifier
                 .padding(it)
                 .padding(16.dp)
-                .fillMaxSize(),
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             MyTextField(label = "Destino",
@@ -122,7 +116,6 @@ fun RegisterTravelScreen(
                 value = travelState.value.budget.toString(),
                 onValueChange = { registerTravelViewModel.onBudgetChange(it.toDouble()) })
 
-            // Exibe o roteiro se já existir (somente leitura)
             if (travelState.value.script.isNotBlank()) {
                 Text(
                     text = "Roteiro:",
@@ -154,56 +147,49 @@ fun RegisterTravelScreen(
             Button(
                 onClick = {
                     registerTravelViewModel.saveTravel()
-                }, modifier = Modifier.padding(top = 16.dp)
+                },
+                modifier = Modifier
+                    .padding(top = 16.dp)
+                    .fillMaxWidth()
             ) {
                 Text(text = if (travelId == -1) "Adicionar Viagem" else "Salvar Alterações")
             }
-            LaunchedEffect(travelState.value.isSaved) {
-                if (travelState.value.isSaved) {
-                    Toast.makeText(ctx, "Viagem salva com sucesso!", Toast.LENGTH_SHORT).show()
-                    onNavigateBack()
-                }
-            }
-
-            // Só mostra o botão de sugestão se não houver roteiro ainda
-            if (travelState.value.script.isBlank()) {
-                Button(
-                    onClick = {
-                        isLoading = true
-                        coroutineScope.launch {
-                            try {
-                                val sugestao = gerarRoteiroComGemini(
-                                    ctx,
-                                    travelState.value.destination,
-                                    travelState.value.travelType.toString(),
-                                    travelState.value.startDate,
-                                    travelState.value.endDate,
-                                    travelState.value.budget
-                                )
-                                aiSuggestion = sugestao
-                                showScriptScreen = true
-                            } catch (e: Exception) {
-                                aiSuggestion = "Erro ao gerar sugestão: ${e.message}"
-                                showScriptScreen = true
-                            } finally {
-                                isLoading = false
-                            }
+            Spacer(modifier = Modifier.height(12.dp))
+            Button(
+                onClick = {
+                    isLoading = true
+                    coroutineScope.launch {
+                        try {
+                            val sugestao = gerarRoteiroComGemini(
+                                ctx,
+                                travelState.value.destination,
+                                travelState.value.travelType.toString(),
+                                travelState.value.startDate,
+                                travelState.value.endDate,
+                                travelState.value.budget
+                            )
+                            aiSuggestion = sugestao
+                            showScriptScreen = true
+                        } catch (e: Exception) {
+                            aiSuggestion = "Erro ao gerar sugestão: ${e.message}"
+                            showScriptScreen = true
+                        } finally {
+                            isLoading = false
                         }
-                    },
-                    enabled = !isLoading,
-                    modifier = Modifier
-                        .wrapContentWidth()
-                        .padding(top = 16.dp)
-                ) {
-                    if (isLoading) {
-                        CircularProgressIndicator(modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
                     }
-                    Text("Sugestão de Roteiro")
+                },
+                enabled = !isLoading,
+                modifier = Modifier
+                    .wrapContentWidth()
+                    .padding(top = 8.dp)
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
                 }
+                Text("Sugestão de Roteiro")
             }
 
-            // Tela/modal para mostrar o roteiro gerado pela IA
             if (showScriptScreen) {
                 AlertDialog(
                     onDismissRequest = { showScriptScreen = false },
@@ -221,15 +207,14 @@ fun RegisterTravelScreen(
                         Row {
                             TextButton(
                                 onClick = {
-                                    // Aceitar: salva o roteiro
                                     registerTravelViewModel.updateTravelRoteiro(travelId, aiSuggestion)
+                                    registerTravelViewModel.loadTravel(travelId)
                                     showScriptScreen = false
                                 }
                             ) { Text("Aceitar") }
                             Spacer(modifier = Modifier.width(8.dp))
                             TextButton(
                                 onClick = {
-                                    // Ajustar: abre modal para ajuste do prompt
                                     adjustPrompt = ""
                                     showScriptScreen = false
                                     showAdjustPromptDialog = true
@@ -238,7 +223,6 @@ fun RegisterTravelScreen(
                             Spacer(modifier = Modifier.width(8.dp))
                             TextButton(
                                 onClick = {
-                                    // Rejeitar: apenas fecha
                                     showScriptScreen = false
                                 }
                             ) { Text("Rejeitar") }
@@ -247,7 +231,6 @@ fun RegisterTravelScreen(
                 )
             }
 
-            // Modal para ajustar o prompt
             if (showAdjustPromptDialog) {
                 AlertDialog(
                     onDismissRequest = { showAdjustPromptDialog = false },
@@ -264,7 +247,6 @@ fun RegisterTravelScreen(
                     confirmButton = {
                         TextButton(
                             onClick = {
-                                // Gera novo roteiro com prompt ajustado
                                 isLoading = true
                                 showAdjustPromptDialog = false
                                 coroutineScope.launch {
