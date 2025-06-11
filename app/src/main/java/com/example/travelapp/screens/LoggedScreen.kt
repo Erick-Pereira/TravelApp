@@ -6,6 +6,8 @@ import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -39,12 +41,13 @@ fun LoggedScreen(
             BottomNavigation {
                 val backStack = navController.currentBackStackEntryAsState();
                 val currentDestination = backStack.value?.destination
-                BottomNavigationItem(selected = currentDestination?.hierarchy?.any { it.route == "TravelListScreen" } == true,
+                BottomNavigationItem(
+                    selected = currentDestination?.hierarchy?.any { it.route == "TravelListScreen" } == true,
                     onClick = { navController.navigate("TravelListScreen") },
                     icon = {
                         Icon(
-                            imageVector = Icons.Default.Home,
-                            contentDescription = "RegisterUserListScreen",
+                            imageVector = Icons.Default.List,
+                            contentDescription = "Viagens",
                         )
                     })
                 BottomNavigationItem(
@@ -52,16 +55,17 @@ fun LoggedScreen(
                     onClick = { navController.navigate("AboutScreen") },
                     icon = {
                         Icon(
-                            imageVector = Icons.Default.Home,
-                            contentDescription = "AboutScreen",
+                            imageVector = Icons.Default.Info,
+                            contentDescription = "Sobre",
                         )
                     })
-                BottomNavigationItem(selected = currentDestination?.hierarchy?.any { it.route == "HomeScreen" } == true,
+                BottomNavigationItem(
+                    selected = currentDestination?.hierarchy?.any { it.route == "HomeScreen" } == true,
                     onClick = { navController.navigate("HomeScreen") },
                     icon = {
                         Icon(
                             imageVector = Icons.Default.Home,
-                            contentDescription = "Home",
+                            contentDescription = "Início",
                         )
                     })
             }
