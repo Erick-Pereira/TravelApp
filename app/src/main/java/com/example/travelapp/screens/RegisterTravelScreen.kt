@@ -147,6 +147,7 @@ fun RegisterTravelScreen(
             Button(
                 onClick = {
                     registerTravelViewModel.saveTravel()
+                    onNavigateBack()
                 },
                 modifier = Modifier
                     .padding(top = 16.dp)
@@ -207,8 +208,15 @@ fun RegisterTravelScreen(
                         Row {
                             TextButton(
                                 onClick = {
-                                    registerTravelViewModel.updateTravelRoteiro(travelId, aiSuggestion)
-                                    registerTravelViewModel.loadTravel(travelId)
+                                    if (travelId == -1) {
+                                        registerTravelViewModel.saveTravel { newId ->
+                                            registerTravelViewModel.updateTravelRoteiro(newId, aiSuggestion)
+                                            registerTravelViewModel.loadTravel(newId)
+                                        }
+                                    } else {
+                                        registerTravelViewModel.updateTravelRoteiro(travelId, aiSuggestion)
+                                        registerTravelViewModel.loadTravel(travelId)
+                                    }
                                     showScriptScreen = false
                                 }
                             ) { Text("Aceitar") }

@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.Flow
 interface TravelDao {
 
     @Insert
-    suspend fun insert(travel: Travel)
+    suspend fun insert(travel: Travel): Long
 
     @Update
     suspend fun update(travel: Travel)

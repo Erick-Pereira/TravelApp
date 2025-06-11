@@ -22,9 +22,9 @@ data class RegisterTravel(
     val startDate: Date = Date(),
     val endDate: Date = Date(),
     val budget: Double = 0.0,
+    val script: String = "",
     val errorMessage: String = "",
     val isSaved: Boolean = false,
-    val script: String = "",
 ) {
     fun validateAllFields() {
         if (destination.isBlank()) {
@@ -56,8 +56,6 @@ class RegisterTravelListViewModel(private val travelDao: TravelDao) : ViewModel(
     val uiState: StateFlow<RegisterTravel> = _uiState.asStateFlow()
 
     val travels: Flow<List<Travel>> = travelDao.findAll()
-
-    var roteiroTemp: String? = null
 
     fun onDestinationChange(destination: String) {
         _uiState.value = _uiState.value.copy(destination = destination)
@@ -91,10 +89,6 @@ class RegisterTravelListViewModel(private val travelDao: TravelDao) : ViewModel(
         }
     }
 
-    fun onScriptChange(script: String) {
-        _uiState.value = _uiState.value.copy(script = script)
-    }
-
     private fun parseDate(dateString: String): Date? {
         return try {
             SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).parse(dateString)
@@ -103,28 +97,18 @@ class RegisterTravelListViewModel(private val travelDao: TravelDao) : ViewModel(
         }
     }
 
-    fun saveTravel() {
+    fun saveTravel(onSaved: (Int) -> Unit = {}) {
         viewModelScope.launch {
             val currentTravel = uiState.value
-
-            if (currentTravel.startDate == null || currentTravel.endDate == null) {
-                _uiState.value = _uiState.value.copy(errorMessage = "Datas inválidas")
-                return@launch
-            }
-
-            if (currentTravel.startDate.after(currentTravel.endDate)) {
-                _uiState.value =
-                    _uiState.value.copy(errorMessage = "A data de início deve ser antes da data de término")
-                return@launch
-            }
-
-            if (currentTravel.id != null && currentTravel.id != -1) {
-                travelDao.update(currentTravel.toTravel())
+            val travel = currentTravel.toTravel()
+            val id = if (currentTravel.id != null && currentTravel.id != -1) {
+                travelDao.update(travel)
+                currentTravel.id
             } else {
-                travelDao.insert(currentTravel.toTravel())
+                travelDao.insert(travel).toInt()
             }
-
-            _uiState.value = _uiState.value.copy(isSaved = true)
+            _uiState.value = _uiState.value.copy(isSaved = true, id = id)
+            onSaved(id)
         }
     }
 
@@ -161,6 +145,10 @@ class RegisterTravelListViewModel(private val travelDao: TravelDao) : ViewModel(
             if (travel != null) {
                 val updatedTravel = travel.copy(script = roteiro)
                 travelDao.update(updatedTravel)
+                // Atualiza o estado se for a viagem atualmente exibida
+                if (uiState.value.id == travelId) {
+                    _uiState.value = _uiState.value.copy(script = roteiro)
+                }
             }
         }
     }
